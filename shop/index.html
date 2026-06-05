@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pixel-office-final-press-start</title>
+  <style>
+    :root{
+      --bg:#181830; --panel:#2a2450; --panel2:#342d63; --dark:#0a0a16; --text:#faf6ff; --muted:#d6cff0;
+      --grass:#5cab5c; --grass-dark:#3f7f3f; --path:#caa66a; --path-dark:#8f6f3f; --water:#5c94fc; --water-dark:#3c64b0;
+      --cyan:#78d8ff; --violet:#b088f9; --pink:#f890d0; --yellow:#f8d858; --mint:#98f8c8; --red:#f87878; --white:#fff8d8;
+      --shadow:0 0 0 4px var(--dark), 0 8px 0 var(--dark);
+    }
+    *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+    body{padding:16px;background-image:linear-gradient(rgba(255,255,255,.02) 50%, transparent 50%);background-size:100% 4px}
+    .app{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.35fr .9fr;gap:16px}.frame{background:var(--panel);border:4px solid var(--dark);box-shadow:var(--shadow)}
+    .left{padding:12px}.right{display:grid;gap:12px}.panel{padding:12px;background:var(--panel2);border:4px solid var(--dark)}
+    .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    h1{margin:0;font-size:clamp(20px,2vw,30px);text-transform:uppercase;color:var(--yellow);letter-spacing:1px}.meta{font-size:13px;color:var(--muted);margin-top:4px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:6px 10px;background:#17142d;border:3px solid #5f55a2;color:#fff6b8;font-size:12px}
+
+    .world{position:relative;aspect-ratio:16/10;overflow:hidden;background:var(--grass)}
+    .world::before{content:"";position:absolute;inset:0;background:
+      linear-gradient(90deg, rgba(255,255,255,.06) 0 1px, transparent 1px 100%),
+      linear-gradient(rgba(255,255,255,.06) 0 1px, transparent 1px 100%);
+      background-size:24px 24px;opacity:.35;pointer-events:none}
+    .world::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(to bottom, rgba(255,255,255,.02) 0 2px, transparent 2px 4px);pointer-events:none}
+
+    .overlay{position:absolute;inset:0;background:rgba(10,10,22,.86);display:flex;align-items:center;justify-content:center;z-index:30}
+    .overlay.hidden{display:none}
+    .start-card{width:min(540px,90%);background:#2b2450;border:4px solid var(--dark);box-shadow:var(--shadow);padding:18px;text-align:center}
+    .title-big{font-size:clamp(24px,4vw,48px);color:var(--yellow);margin:0 0 10px 0;text-transform:uppercase;line-height:1.1}
+    .blink{animation:blink 1s steps(2) infinite}@keyframes blink{50%{opacity:.25}}
+
+    .path{position:absolute;background:var(--path);border:4px solid var(--path-dark)} .path.h{left:10%;right:10%;top:48%;height:14%} .path.v{left:44%;top:14%;bottom:10%;width:12%}
+    .water{position:absolute;left:7%;bottom:12%;width:16%;height:18%;background:var(--water);border:4px solid var(--water-dark)}
+    .grass-patch{position:absolute;width:28px;height:28px;background:var(--grass-dark);border:4px solid #2d5c2d}.g1{left:26%;top:22%}.g2{left:74%;top:70%}.g3{left:64%;top:26%}
+    .crate{position:absolute;width:24px;height:24px;background:#c89058;border:4px solid var(--dark)}.c1{left:39%;top:30%}.c2{left:55%;top:30%}
+
+    .building{position:absolute;width:160px;height:140px}.base{position:absolute;left:12px;right:12px;bottom:0;top:36px;background:#f0e0b8;border:4px solid var(--dark)}
+    .roof{position:absolute;left:0;right:0;top:0;height:64px;border:4px solid var(--dark)} .roof:before{content:"";position:absolute;left:16px;right:16px;top:12px;height:16px;background:rgba(255,255,255,.22);border:3px solid rgba(10,10,22,.35)}
+    .door{position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:26px;height:36px;background:var(--dark)} .sign{position:absolute;top:-28px;left:50%;transform:translateX(-50%);padding:4px 8px;background:var(--dark);color:#fff6b8;font-size:12px;border:3px solid #584e96;white-space:nowrap}
+    .store{left:6%;top:11%}.store .roof{background:var(--cyan)} .warehouse{left:39.5%;top:5%}.warehouse .roof{background:var(--violet)} .home{right:6%;top:11%}.home .roof{background:var(--pink)}
+
+    .character{position:absolute;width:22px;height:28px;transform:translate(-50%,-50%);z-index:6;transition:left 1.6s steps(20), top 1.6s steps(20), opacity .2s linear}
+    .character.hidden{opacity:0;pointer-events:none}.character .head{position:absolute;top:0;left:4px;width:14px;height:10px;background:#ffd8b0;border:3px solid var(--dark)}
+    .character .body{position:absolute;left:2px;right:2px;top:8px;bottom:4px;border:3px solid var(--dark)} .character .leg1,.character .leg2{position:absolute;bottom:0;width:5px;height:6px;background:var(--dark)} .character .leg1{left:3px}.character .leg2{right:3px}
+    .buyer .body{background:var(--red)} .analyst1 .body{background:var(--mint)} .analyst2 .body{background:var(--cyan)} .courier .body{background:var(--yellow)}
+
+    .bubble{position:absolute;min-width:110px;max-width:160px;background:var(--white);color:#24190c;border:4px solid var(--dark);padding:8px 10px;font-size:12px;line-height:1.25;z-index:10;opacity:0;transform:translate(-50%,-12px)}
+    .bubble.show{opacity:1}.bubble:after{content:"";position:absolute;left:18px;bottom:-10px;width:10px;height:10px;background:var(--white);border-right:4px solid var(--dark);border-bottom:4px solid var(--dark);transform:rotate(45deg)}
+
+    h2,h3{margin:0 0 10px 0;color:var(--yellow);font-size:18px;text-transform:uppercase}.story{min-height:92px;line-height:1.5;font-size:14px}.choices{display:grid;gap:10px;margin-top:12px}
+    .btn{border:none;background:#171126;color:var(--text);padding:12px 14px;text-align:left;font:inherit;cursor:pointer;border:4px solid #605191;box-shadow:inset 0 -4px 0 rgba(0,0,0,.28)} .btn:hover{filter:brightness(1.08)} .btn.primary{background:#24543a;border-color:var(--mint)} .btn.delivery{background:#244a78;border-color:var(--cyan)} .btn.pickup{background:#6f4b1f;border-color:var(--yellow)}
+    .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.status{background:#201735;border:3px solid var(--dark);padding:10px;font-size:12px;min-height:70px}.status strong{display:block;color:#fff4aa;margin-bottom:6px;font-size:11px;text-transform:uppercase}
+    .chat{display:grid;gap:8px;max-height:220px;overflow:auto}.msg{padding:10px 12px;border:3px solid var(--dark);font-size:13px;line-height:1.4}.msg.bot{background:#1c1831}.msg.user{background:#553167}.msg.system{background:#295246}
+    .score{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.score .status{min-height:62px}
+
+    @media (max-width:960px){.app{grid-template-columns:1fr}.status-grid,.score{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="frame left">
+      <div class="top">
+        <div>
+          <h1>Pixel Office Final</h1>
+          <div class="meta">Финальная демо-версия: PRESS START, короткий 8-bit HUD, top-down сцена и два маршрута заказа. </div>
+        </div>
+        <div class="chips">
+          <div class="chip" id="phaseChip">Фаза: старт</div>
+          <div class="chip" id="routeChip">Маршрут: не выбран</div>
+          <div class="chip" id="employeeChip">Сотрудник: не назначен</div>
+        </div>
+      </div>
+
+      <div class="world" id="world">
+        <div class="overlay" id="startOverlay">
+          <div class="start-card">
+            <h2 class="title-big">Pixel Office</h2>
+            <div style="margin-bottom:12px;color:var(--muted)">Мини-игра про заказ, склад и доставку</div>
+            <button class="btn primary" id="startBtn" style="text-align:center">PRESS START</button>
+            <div class="meta blink" style="margin-top:12px">Нажми, чтобы начать смену</div>
+          </div>
+        </div>
+
+        <div class="path h"></div><div class="path v"></div><div class="water"></div>
+        <div class="grass-patch g1"></div><div class="grass-patch g2"></div><div class="grass-patch g3"></div>
+        <div class="crate c1"></div><div class="crate c2"></div>
+
+        <div class="building store"><div class="sign">Магазин</div><div class="roof"></div><div class="base"></div><div class="door"></div></div>
+        <div class="building warehouse"><div class="sign">Склад</div><div class="roof"></div><div class="base"></div><div class="door"></div></div>
+        <div class="building home"><div class="sign">Дом</div><div class="roof"></div><div class="base"></div><div class="door"></div></div>
+
+        <div class="bubble" id="bubbleBuyer"></div>
+        <div class="bubble" id="bubbleAnalyst"></div>
+        <div class="bubble" id="bubbleCourier"></div>
+
+        <div class="character buyer" id="buyer" style="left:84%;top:56%"><div class="head"></div><div class="body"></div><div class="leg1"></div><div class="leg2"></div></div>
+        <div class="character analyst1" id="analyst1" style="left:20%;top:56%"><div class="head"></div><div class="body"></div><div class="leg1"></div><div class="leg2"></div></div>
+        <div class="character analyst2" id="analyst2" style="left:24%;top:60%"><div class="head"></div><div class="body"></div><div class="leg1"></div><div class="leg2"></div></div>
+        <div class="character courier hidden" id="courier" style="left:50%;top:58%"><div class="head"></div><div class="body"></div><div class="leg1"></div><div class="leg2"></div></div>
+      </div>
+    </section>
+
+    <aside class="right">
+      <section class="frame panel">
+        <h2>Управление</h2>
+        <div class="story" id="story">Нажми PRESS START, чтобы открыть игровой сценарий.</div>
+        <div class="choices" id="choices"></div>
+      </section>
+      <section class="frame panel">
+        <h3>HUD</h3>
+        <div class="score" id="scoreGrid"></div>
+      </section>
+      <section class="frame panel">
+        <h3>Состояние</h3>
+        <div class="status-grid" id="statusGrid"></div>
+      </section>
+      <section class="frame panel">
+        <h3>Журнал</h3>
+        <div class="chat" id="chat"></div>
+      </section>
+    </aside>
+  </main>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const els = {
+      story: $('#story'), choices: $('#choices'), chat: $('#chat'), statusGrid: $('#statusGrid'), scoreGrid: $('#scoreGrid'),
+      phaseChip: $('#phaseChip'), routeChip: $('#routeChip'), employeeChip: $('#employeeChip'), startOverlay: $('#startOverlay'), startBtn: $('#startBtn'),
+      buyer: $('#buyer'), analyst1: $('#analyst1'), analyst2: $('#analyst2'), courier: $('#courier'),
+      bubbleBuyer: $('#bubbleBuyer'), bubbleAnalyst: $('#bubbleAnalyst'), bubbleCourier: $('#bubbleCourier')
+    };
+    const pts = { home:{x:84,y:56}, ask:{x:28,y:56}, warehouse:{x:50,y:52}, warehouseBuyer:{x:56,y:56}, courierStart:{x:52,y:58}, homeDoor:{x:78,y:56} };
+    const state = { phase:'старт', route:null, employee:null, ready:false, done:false, total:0, pickup:0, delivery:0 };
+
+    function moveInstant(node,x,y){ node.style.transition='none'; node.style.left=x+'%'; node.style.top=y+'%'; node.getBoundingClientRect(); node.style.transition='left 1.6s steps(20), top 1.6s steps(20), opacity .2s linear'; }
+    function move(node,x,y,ms=1600){ return new Promise(r=>{ node.style.left=x+'%'; node.style.top=y+'%'; setTimeout(r,ms); }); }
+    function setStory(text,buttons=[]){ els.story.textContent=text; els.choices.innerHTML=''; buttons.forEach(b=>{ const btn=document.createElement('button'); btn.className='btn '+(b.className||''); btn.textContent=b.label; btn.onclick=b.onClick; els.choices.appendChild(btn); }); }
+    function log(role,text,kind='bot'){ const d=document.createElement('div'); d.className='msg '+kind; d.textContent=role+': '+text; els.chat.prepend(d); }
+    function update(){
+      els.phaseChip.textContent='Фаза: '+state.phase; els.routeChip.textContent='Маршрут: '+(state.route||'не выбран'); els.employeeChip.textContent='Сотрудник: '+(state.employee||'не назначен');
+      const rows=[['Фаза',state.phase],['Способ',state.route||'ожидание'],['Сотрудник',state.employee||'—'],['Товар готов',state.ready?'да':'нет'],['Финиш',state.done?'да':'нет'],['Курьер',state.route==='доставка'?'активен':'—']];
+      els.statusGrid.innerHTML=rows.map(([k,v])=>`<div class="status"><strong>${k}</strong>${v}</div>`).join('');
+      const score=[['Всего заказов',state.total],['Самовывоз',state.pickup],['Доставка',state.delivery]];
+      els.scoreGrid.innerHTML=score.map(([k,v])=>`<div class="status"><strong>${k}</strong>${v}</div>`).join('');
+    }
+    function placeBubble(node,bubble,text){ if(!text){ bubble.classList.remove('show'); bubble.textContent=''; return; } bubble.style.left=parseFloat(node.style.left)+'%'; bubble.style.top=(parseFloat(node.style.top)-10)+'%'; bubble.textContent=text; bubble.classList.add('show'); }
+    function clearBubbles(){ placeBubble(els.buyer,els.bubbleBuyer,''); placeBubble(els.analyst1,els.bubbleAnalyst,''); placeBubble(els.courier,els.bubbleCourier,''); }
+    function chooseEmployee(){ const pool=[['Аналитик 1',els.analyst1],['Аналитик 2',els.analyst2]]; const p=pool[Math.floor(Math.random()*pool.length)]; state.employee=p[0]; return p[1]; }
+    function resetRound(){ state.phase='старт'; state.route=null; state.employee=null; state.ready=false; state.done=false; clearBubbles(); moveInstant(els.buyer,pts.home.x,pts.home.y); moveInstant(els.analyst1,20,56); moveInstant(els.analyst2,24,60); moveInstant(els.courier,pts.courierStart.x,pts.courierStart.y); els.courier.classList.add('hidden'); update(); }
+    function fullReset(){ state.total=0; state.pickup=0; state.delivery=0; els.chat.innerHTML=''; resetRound(); setStory('Нажми PRESS START, чтобы открыть игровой сценарий.',[]); update(); }
+
+    async function startGame(){ els.startOverlay.classList.add('hidden'); resetRound(); state.phase='запрос'; update(); placeBubble(els.buyer,els.bubbleBuyer,'Хочу купить'); log('Покупатель','Хочу приобрести продукцию','user'); setStory('Покупатель отправляет запрос магазину.',[{label:'Передать в аналитику',className:'primary',onClick:analyticsStage}]); }
+    async function analyticsStage(){ clearBubbles(); const actor=chooseEmployee(); state.phase='вопрос'; update(); await move(actor,pts.ask.x,pts.ask.y,900); placeBubble(actor,els.bubbleAnalyst,'Самовывоз или доставка?'); log(state.employee,'Самовывозом или доставкой?','bot'); setStory('Сотрудник уточняет способ получения.',[{label:'Самовывоз',className:'pickup',onClick:()=>pickupFlow(actor)},{label:'Доставка',className:'delivery',onClick:()=>deliveryFlow(actor)}]); }
+    async function pickupFlow(actor){ clearBubbles(); state.phase='самовывоз'; state.route='самовывоз'; update(); placeBubble(els.buyer,els.bubbleBuyer,'Самовывоз'); log('Покупатель','Самовывозом','user'); setStory('Покупатель едет на склад.',[]); await Promise.all([move(actor,pts.warehouse.x,pts.warehouse.y), move(els.buyer,70,56,1400)]); state.ready=true; update(); placeBubble(actor,els.bubbleAnalyst,'Заказ готов'); log('Система',state.employee+' собрал заказ.','system'); await move(els.buyer,pts.warehouseBuyer.x,pts.warehouseBuyer.y,1400); state.done=true; state.phase='завершено'; state.total+=1; state.pickup+=1; update(); clearBubbles(); placeBubble(els.buyer,els.bubbleBuyer,'Забираю'); log('Система','Покупатель забрал товар на складе.','system'); setStory('Самовывоз завершён.',[{label:'Новый заказ',className:'primary',onClick:startGame},{label:'PRESS START экран',onClick:()=>{els.startOverlay.classList.remove('hidden'); fullReset();}}]); }
+    async function deliveryFlow(actor){ clearBubbles(); state.phase='доставка'; state.route='доставка'; update(); placeBubble(els.buyer,els.bubbleBuyer,'Доставка'); log('Покупатель','Доставкой','user'); setStory('Склад готовит отгрузку.',[]); await move(actor,pts.warehouse.x,pts.warehouse.y,1400); state.ready=true; update(); placeBubble(actor,els.bubbleAnalyst,'Передаю заказ'); log('Система',state.employee+' передал товар курьеру.','system'); els.courier.classList.remove('hidden'); moveInstant(els.courier,pts.courierStart.x,pts.courierStart.y); placeBubble(els.courier,els.bubbleCourier,'Везу'); log('Курьер','Забрал заказ','bot'); await move(els.courier,pts.homeDoor.x,pts.homeDoor.y,1700); state.done=true; state.phase='доставлено'; state.total+=1; state.delivery+=1; update(); clearBubbles(); placeBubble(els.courier,els.bubbleCourier,'Привёз'); log('Система','Курьер доставил товар покупателю.','system'); setStory('Доставка завершена.',[{label:'Новый заказ',className:'primary',onClick:startGame},{label:'PRESS START экран',onClick:()=>{els.startOverlay.classList.remove('hidden'); fullReset();}}]); }
+
+    els.startBtn.addEventListener('click', startGame);
+    fullReset();
+  </script>
+</body>
+</html>
