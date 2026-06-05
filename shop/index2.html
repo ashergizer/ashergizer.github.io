@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pixel-office-logistics-v2</title>
+  <style>
+    :root {
+      --bg:#140f24;
+      --bg2:#22183d;
+      --panel:#2f2355;
+      --panel2:#3f2f6f;
+      --text:#f7f3ff;
+      --muted:#c4bce2;
+      --yellow:#ffd166;
+      --mint:#76ffd0;
+      --blue:#72c7ff;
+      --pink:#ff95c6;
+      --red:#ff7c84;
+      --dark:#0f0a1a;
+      --road:#6f678d;
+      --grass:#38516c;
+      --shadow:0 0 0 4px var(--dark), 0 10px 0 0 var(--dark);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:radial-gradient(circle at top, #2c2150 0%, var(--bg) 55%);color:var(--text);font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+    body{padding:18px}
+    .app{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:1.35fr .95fr;gap:18px}
+    .frame{background:var(--panel);border:4px solid var(--dark);box-shadow:var(--shadow)}
+    .left{padding:14px}
+    .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .logo{display:flex;align-items:center;gap:12px}
+    .logo-mark{width:28px;height:28px;position:relative;background:var(--yellow);border:4px solid var(--dark);box-shadow:8px 0 0 var(--mint), 0 8px 0 var(--blue)}
+    h1{margin:0;font-size:clamp(20px,2vw,30px);text-transform:uppercase;color:var(--yellow);letter-spacing:1px}
+    .meta{font-size:13px;color:var(--muted);margin-top:4px}
+    .chipbar{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{padding:6px 10px;background:#1c1431;border:3px solid #5f4f94;color:#fff6c8;font-size:12px}
+
+    .world{position:relative;aspect-ratio:16/10;background:linear-gradient(#261a47 0 48%, #30456c 48% 100%);overflow:hidden}
+    .world::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(to bottom, rgba(255,255,255,.04) 0 2px, transparent 2px 4px);opacity:.16;pointer-events:none}
+    .stars{position:absolute;inset:0;background:
+      radial-gradient(circle at 9% 12%, #fff 0 1px, transparent 1px),
+      radial-gradient(circle at 23% 18%, #fff 0 1px, transparent 1px),
+      radial-gradient(circle at 46% 11%, #fff 0 1px, transparent 1px),
+      radial-gradient(circle at 67% 16%, #fff 0 1px, transparent 1px),
+      radial-gradient(circle at 86% 9%, #fff 0 1px, transparent 1px);
+      opacity:.8}
+    .cloud{position:absolute;width:88px;height:24px;background:#ece7ff;border:4px solid var(--dark);top:12%;animation:drift 18s linear infinite}
+    .cloud:before,.cloud:after{content:"";position:absolute;background:#ece7ff;border:4px solid var(--dark);top:-14px}
+    .cloud:before{left:8px;width:26px;height:20px}.cloud:after{right:10px;width:34px;height:24px}
+    .c1{left:8%}.c2{left:64%;top:18%;animation-duration:23s}
+    @keyframes drift{0%{transform:translateX(-10px)}50%{transform:translateX(10px)}100%{transform:translateX(-10px)}}
+
+    .road{position:absolute;left:10%;right:10%;top:52%;height:12%;background:var(--road);border-top:4px solid #887fa7;border-bottom:4px solid #584f77}
+    .road:after{content:"";position:absolute;left:0;right:0;top:50%;height:4px;transform:translateY(-50%);background:repeating-linear-gradient(to right, transparent 0 18px, #f8e89e 18px 34px)}
+
+    .building{position:absolute;width:148px;height:126px;border:4px solid var(--dark);display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;color:var(--dark);font-weight:700;text-transform:uppercase}
+    .building .roof{position:absolute;left:-4px;right:-4px;top:-14px;height:16px;background:var(--dark)}
+    .building .door{position:absolute;bottom:0;width:26px;height:42px;background:var(--dark)}
+    .building .windows{position:absolute;left:14px;right:14px;top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .building .windows span{height:20px;background:rgba(255,255,255,.5);border:3px solid rgba(15,10,26,.75)}
+    .building .sign{position:absolute;top:-38px;left:50%;transform:translateX(-50%);padding:5px 8px;background:var(--dark);color:#fff3bb;font-size:12px;white-space:nowrap;border:3px solid #4d3f78}
+    .store{left:3%;top:23%;background:var(--blue)}
+    .warehouse{left:41.5%;top:15%;background:#c7a1ff}
+    .home{right:3%;top:23%;background:var(--pink)}
+
+    .dialog-bubble{position:absolute;min-width:170px;max-width:240px;background:#fff2c9;color:#291d0f;border:4px solid var(--dark);padding:8px 10px;font-size:12px;line-height:1.35;box-shadow:0 6px 0 rgba(15,10,26,.85);opacity:0;transform:translateY(8px);transition:.25s}
+    .dialog-bubble.show{opacity:1;transform:translateY(0)}
+    .dialog-bubble:after{content:"";position:absolute;left:16px;bottom:-12px;width:12px;height:12px;background:#fff2c9;border-right:4px solid var(--dark);border-bottom:4px solid var(--dark);transform:rotate(45deg)}
+    #bubbleBuyer{right:8%;top:8%}
+    #bubbleAnalyst{left:11%;top:8%}
+    #bubbleCourier{left:56%;top:10%}
+
+    .character{position:absolute;width:24px;height:34px;transform:translate(-50%,-50%);z-index:4;transition:left 1.8s steps(28), top 1.8s steps(28), opacity .2s linear}
+    .character.hidden{opacity:0;pointer-events:none}
+    .character .tag{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;padding:2px 4px;background:var(--dark);white-space:nowrap}
+    .character .head{position:absolute;top:0;left:5px;width:14px;height:12px;background:#ffd8b0;border:3px solid var(--dark)}
+    .character .body{position:absolute;left:3px;right:3px;top:10px;bottom:6px;border:3px solid var(--dark)}
+    .character .leg1,.character .leg2{position:absolute;bottom:0;width:5px;height:8px;background:var(--dark)}
+    .character .leg1{left:4px}.character .leg2{right:4px}
+    .buyer .body{background:var(--red)}
+    .analyst1 .body{background:var(--mint)}
+    .analyst2 .body{background:var(--blue)}
+    .courier .body{background:var(--yellow)}
+    .van{position:absolute;width:42px;height:22px;background:var(--yellow);border:4px solid var(--dark);z-index:3;transform:translate(-50%,-50%);transition:left 1.8s steps(28), top 1.8s steps(28), opacity .2s linear}
+    .van.hidden{opacity:0}
+    .van:before{content:"";position:absolute;right:-4px;top:4px;width:12px;height:10px;background:#fff2c9;border:4px solid var(--dark)}
+    .van:after{content:"";position:absolute;left:4px;bottom:-10px;width:8px;height:8px;background:var(--dark);box-shadow:20px 0 0 var(--dark)}
+
+    .right{display:grid;gap:14px}
+    .panel{padding:14px;background:var(--panel2);border:4px solid var(--dark)}
+    .panel h2,.panel h3{margin:0 0 10px 0;color:var(--yellow);font-size:18px;text-transform:uppercase}
+    .story{min-height:98px;line-height:1.5;font-size:14px}
+    .choices{display:grid;gap:10px;margin-top:12px}
+    .btn{border:none;background:#171126;color:var(--text);padding:12px 14px;text-align:left;font:inherit;cursor:pointer;border:4px solid #605191;box-shadow:inset 0 -4px 0 rgba(0,0,0,.28)}
+    .btn:hover{filter:brightness(1.08)}
+    .btn.primary{background:#235147;border-color:var(--mint)}
+    .btn.delivery{background:#234563;border-color:var(--blue)}
+    .btn.pickup{background:#66431d;border-color:var(--yellow)}
+    .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .status{background:#201735;border:3px solid var(--dark);padding:10px;font-size:12px;min-height:72px}
+    .status strong{display:block;color:#fff5bf;margin-bottom:6px;font-size:11px;text-transform:uppercase}
+    .chat{display:grid;gap:8px;max-height:220px;overflow:auto}
+    .msg{padding:10px 12px;border:3px solid var(--dark);font-size:13px;line-height:1.4}
+    .msg.bot{background:#201735}
+    .msg.user{background:#4c2f63}
+    .msg.system{background:#254c47}
+    .legend{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .legend div{background:#201735;border:3px solid var(--dark);padding:10px;font-size:12px}
+    .pixel-text{color:#ffeeb0}
+
+    @media (max-width:960px){
+      .app{grid-template-columns:1fr}
+      .world{aspect-ratio:16/12}
+      .status-grid,.legend{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="frame left">
+      <div class="topbar">
+        <div class="logo">
+          <div class="logo-mark" aria-hidden="true"></div>
+          <div>
+            <h1>Pixel Office Dispatch</h1>
+            <div class="meta">Визуальная демо-игра процесса: бот → аналитика → склад → выдача или доставка</div>
+          </div>
+        </div>
+        <div class="chipbar">
+          <div class="chip" id="phaseChip">Фаза: старт</div>
+          <div class="chip" id="routeChip">Маршрут: не выбран</div>
+          <div class="chip" id="employeeChip">Сотрудник: не назначен</div>
+        </div>
+      </div>
+
+      <div class="world" id="world">
+        <div class="stars"></div>
+        <div class="cloud c1"></div>
+        <div class="cloud c2"></div>
+        <div class="road"></div>
+
+        <div class="building store"><div class="roof"></div><div class="sign">Магазин / бот</div><div class="windows"><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="door"></div></div>
+        <div class="building warehouse"><div class="roof"></div><div class="sign">Склад</div><div class="windows"><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="door"></div></div>
+        <div class="building home"><div class="roof"></div><div class="sign">Покупатель</div><div class="windows"><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="door"></div></div>
+
+        <div class="dialog-bubble" id="bubbleBuyer"></div>
+        <div class="dialog-bubble" id="bubbleAnalyst"></div>
+        <div class="dialog-bubble" id="bubbleCourier"></div>
+
+        <div class="character buyer" id="buyer" style="left:88%;top:64%"><div class="tag">Покупатель</div><div class="head"></div><div class="body"></div><div class="leg1"></div><div class="leg2"></div></div>
+        <div class="character analyst1" id="analyst1" style="left:16%;top:64%"><div class="tag">Аналитик 1</div><div class="head"></div><div class="body"></div><div class="leg1"></div><div class="leg2"></div></div>
+        <div class="character analyst2" id="analyst2" style="left:21%;top:68%"><div class="tag">Аналитик 2</div><div class="head"></div><div class="body"></div><div class="leg1"></div><div class="leg2"></div></div>
+        <div class="character courier hidden" id="courier" style="left:52%;top:63%"><div class="tag">Доставщик</div><div class="head"></div><div class="body"></div><div class="leg1"></div><div class="leg2"></div></div>
+        <div class="van hidden" id="van" style="left:52%;top:64%"></div>
+      </div>
+    </section>
+
+    <aside class="right">
+      <section class="frame panel">
+        <h2>Сценарий</h2>
+        <div class="story" id="story">Запусти игровой сценарий покупки.</div>
+        <div class="choices" id="choices"></div>
+      </section>
+
+      <section class="frame panel">
+        <h3>Состояние заказа</h3>
+        <div class="status-grid" id="statusGrid"></div>
+      </section>
+
+      <section class="frame panel">
+        <h3>Игровой чат</h3>
+        <div class="chat" id="chat"></div>
+      </section>
+
+      <section class="frame panel">
+        <h3>Легенда</h3>
+        <div class="legend">
+          <div><span class="pixel-text">Покупатель</span> инициирует заказ и выбирает способ получения.</div>
+          <div><span class="pixel-text">2 аналитика</span> работают как единый блок и могут пойти на склад.</div>
+          <div><span class="pixel-text">Самовывоз</span> завершает сделку на складе.</div>
+          <div><span class="pixel-text">Доставка</span> вызывает курьера, который везёт заказ покупателю.</div>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const els = {
+      story: $('#story'), choices: $('#choices'), chat: $('#chat'), statusGrid: $('#statusGrid'),
+      buyer: $('#buyer'), analyst1: $('#analyst1'), analyst2: $('#analyst2'), courier: $('#courier'), van: $('#van'),
+      phaseChip: $('#phaseChip'), routeChip: $('#routeChip'), employeeChip: $('#employeeChip'),
+      bubbleBuyer: $('#bubbleBuyer'), bubbleAnalyst: $('#bubbleAnalyst'), bubbleCourier: $('#bubbleCourier')
+    };
+
+    const points = {
+      home:{x:88,y:64}, store:{x:19,y:64}, analystTalk:{x:31,y:62}, warehouse:{x:50,y:60}, warehouseBuyer:{x:57,y:64},
+      courierStart:{x:54,y:63}, homeDoor:{x:82,y:60}
+    };
+
+    const state = { phase:'старт', route:null, employee:null, ready:false, done:false };
+
+    function setBubble(node, text, show=true){ node.textContent=text; node.classList.toggle('show', !!show && !!text); }
+    function clearBubbles(){ [els.bubbleBuyer, els.bubbleAnalyst, els.bubbleCourier].forEach(b=>setBubble(b,'' ,false)); }
+
+    function moveInstant(node,x,y){ node.style.transition='none'; node.style.left=x+'%'; node.style.top=y+'%'; node.getBoundingClientRect(); node.style.transition='left 1.8s steps(28), top 1.8s steps(28), opacity .2s linear'; }
+    function move(node,x,y,ms=1800){ return new Promise(r=>{ node.style.left=x+'%'; node.style.top=y+'%'; setTimeout(r,ms); }); }
+    function say(role,text,kind='bot'){ const d=document.createElement('div'); d.className='msg '+kind; d.textContent=role+': '+text; els.chat.prepend(d); }
+    function setStory(text,buttons=[]){ els.story.textContent=text; els.choices.innerHTML=''; buttons.forEach(b=>{ const btn=document.createElement('button'); btn.className='btn '+(b.className||''); btn.textContent=b.label; btn.onclick=b.onClick; els.choices.appendChild(btn); }); }
+    function updateChips(){ els.phaseChip.textContent='Фаза: '+state.phase; els.routeChip.textContent='Маршрут: '+(state.route||'не выбран'); els.employeeChip.textContent='Сотрудник: '+(state.employee||'не назначен'); }
+    function updateStatus(){
+      const rows=[['Статус заявки',state.phase],['Способ получения',state.route||'ожидание выбора'],['Сотрудник',state.employee||'ожидание назначения'],['Заказ собран',state.ready?'да':'нет'],['Сделка завершена',state.done?'да':'нет'],['Роль курьера',state.route==='доставка'?'активна':'не используется']];
+      els.statusGrid.innerHTML=rows.map(([k,v])=>`<div class="status"><strong>${k}</strong>${v}</div>`).join('');
+      updateChips();
+    }
+    function reset(){
+      state.phase='старт'; state.route=null; state.employee=null; state.ready=false; state.done=false;
+      els.chat.innerHTML=''; clearBubbles();
+      moveInstant(els.buyer, points.home.x, points.home.y);
+      moveInstant(els.analyst1, 16, 64); moveInstant(els.analyst2, 21, 68);
+      moveInstant(els.courier, points.courierStart.x, points.courierStart.y); els.courier.classList.add('hidden');
+      moveInstant(els.van, points.courierStart.x, 64); els.van.classList.add('hidden');
+      updateStatus();
+    }
+    function chooseEmployee(){
+      const list=[['Аналитик 1', els.analyst1], ['Аналитик 2', els.analyst2]];
+      const picked=list[Math.floor(Math.random()*list.length)];
+      state.employee=picked[0];
+      return picked[1];
+    }
+
+    async function startGame(){
+      reset();
+      state.phase='запрос в бот'; updateStatus();
+      setBubble(els.bubbleBuyer,'Хочу приобрести продукцию');
+      say('Покупатель','Хочу приобрести продукцию','user');
+      setStory('Покупатель инициирует заказ через бота магазина.',[
+        {label:'Передать заявку в отдел аналитики', className:'primary', onClick: analyticsStage}
+      ]);
+    }
+
+    async function analyticsStage(){
+      clearBubbles();
+      const actor=chooseEmployee();
+      state.phase='вопрос от аналитики'; updateStatus();
+      say('Система', state.employee+' получил заявку и начинает обработку.','system');
+      await move(actor, points.analystTalk.x, points.analystTalk.y, 1000);
+      setBubble(els.bubbleAnalyst,'Самовывозом или доставкой?');
+      say(state.employee,'Вы планируете самовывозом или доставкой?','bot');
+      setStory('Отдел аналитики уточняет способ получения заказа.',[
+        {label:'Выбрать самовывоз', className:'pickup', onClick:()=>pickupFlow(actor)},
+        {label:'Выбрать доставку', className:'delivery', onClick:()=>deliveryFlow(actor)}
+      ]);
+    }
+
+    async function pickupFlow(actor){
+      clearBubbles();
+      state.phase='самовывоз'; state.route='самовывоз'; updateStatus();
+      say('Покупатель','Самовывозом.','user');
+      setBubble(els.bubbleBuyer,'Самовывоз');
+      setStory('Сотрудник идёт на склад, а покупатель едет за товаром.',[]);
+      await Promise.all([
+        move(actor, points.warehouse.x, points.warehouse.y),
+        move(els.buyer, 74, 64, 1400)
+      ]);
+      state.ready=true; updateStatus();
+      say('Система', state.employee+' собрал заказ на складе.','system');
+      setBubble(els.bubbleAnalyst,'Заказ готов');
+      await move(els.buyer, points.warehouseBuyer.x, points.warehouseBuyer.y, 1400);
+      state.done=true; state.phase='сделка завершена'; updateStatus();
+      clearBubbles();
+      setBubble(els.bubbleBuyer,'Забираю заказ');
+      say('Система','Покупатель приехал на склад и забрал заказ.','system');
+      setStory('Сделка завершена: покупатель получил товар на складе.',[
+        {label:'Сыграть ещё раз', className:'primary', onClick:startGame}
+      ]);
+    }
+
+    async function deliveryFlow(actor){
+      clearBubbles();
+      state.phase='доставка'; state.route='доставка'; updateStatus();
+      say('Покупатель','Доставкой.','user');
+      setBubble(els.bubbleBuyer,'Доставка');
+      setStory('Сотрудник идёт на склад и вызывает доставщика.',[]);
+      await move(actor, points.warehouse.x, points.warehouse.y, 1400);
+      state.ready=true; updateStatus();
+      say('Система', state.employee+' передал заказ на отгрузку.','system');
+      setBubble(els.bubbleAnalyst,'Передаю заказ');
+      els.courier.classList.remove('hidden');
+      els.van.classList.remove('hidden');
+      moveInstant(els.courier, points.courierStart.x, points.courierStart.y);
+      moveInstant(els.van, points.courierStart.x, 64);
+      await new Promise(r=>setTimeout(r,250));
+      clearBubbles();
+      setBubble(els.bubbleCourier,'Доставлю сегодня');
+      say('Доставщик','Забрал заказ, выезжаю к покупателю.','bot');
+      await Promise.all([
+        move(els.courier, points.homeDoor.x, points.homeDoor.y, 1700),
+        move(els.van, points.homeDoor.x, 64, 1700)
+      ]);
+      state.done=true; state.phase='заказ доставлен'; updateStatus();
+      clearBubbles();
+      setBubble(els.bubbleCourier,'Заказ у двери');
+      say('Система','Доставщик передал заказ покупателю.','system');
+      setStory('Сделка завершена: заказ доставлен покупателю домой.',[
+        {label:'Сыграть ещё раз', className:'primary', onClick:startGame}
+      ]);
+    }
+
+    startGame();
+  </script>
+</body>
+</html>
