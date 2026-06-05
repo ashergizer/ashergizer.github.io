@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wakeclub-pixel-demo</title>
+  <style>
+    :root{
+      --bg:#142033; --panel:#273856; --panel2:#33486d; --dark:#0b1220; --text:#f5fbff; --muted:#c4d6ea;
+      --grass:#6ea05f; --grass2:#5e8d52; --path:#c7aa78; --path2:#93764e; --lake:#4ba6d8; --lake2:#32739a;
+      --booth:#89d0ff; --booth2:#f5a6d8; --cash:#ffd569; --gate:#d8e7f2; --red:#ff8686; --mint:#8cf0b8; --cyan:#7fe0ff; --yellow:#ffd85a; --white:#fff7d6;
+      --shadow:0 0 0 4px var(--dark), 0 8px 0 var(--dark);
+    }
+    *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+    body{padding:16px;background-image:linear-gradient(rgba(255,255,255,.02) 50%, transparent 50%);background-size:100% 4px}
+    .app{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:1.4fr .92fr;gap:16px}.frame{background:var(--panel);border:4px solid var(--dark);box-shadow:var(--shadow)}
+    .left{padding:12px}.right{display:grid;gap:12px}.panel{padding:12px;background:var(--panel2);border:4px solid var(--dark)}
+    .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    h1{margin:0;font-size:clamp(20px,2vw,30px);text-transform:uppercase;color:var(--yellow);letter-spacing:1px}.meta{font-size:13px;color:var(--muted);margin-top:4px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:6px 10px;background:#17243d;border:3px solid #5870a2;color:#fff3b5;font-size:12px}
+
+    .world{position:relative;aspect-ratio:16/10;overflow:hidden;background:var(--grass)}
+    .overlay{position:absolute;inset:0;background:rgba(11,18,32,.84);display:flex;align-items:center;justify-content:center;z-index:40;pointer-events:auto}
+    .overlay.hidden{display:none}
+    .start-card{width:min(520px,88%);background:#243554;border:4px solid var(--dark);box-shadow:var(--shadow);padding:18px;text-align:center;position:relative;z-index:45}
+    .title-big{font-size:clamp(24px,4vw,46px);color:var(--yellow);margin:0 0 10px 0;text-transform:uppercase;line-height:1.1}
+    .blink{animation:blink 1s steps(2) infinite}
+    @keyframes blink{50%{opacity:.25}}
+    .world::before{content:"";position:absolute;inset:0;background:
+      linear-gradient(90deg, rgba(255,255,255,.06) 0 1px, transparent 1px 100%),
+      linear-gradient(rgba(255,255,255,.06) 0 1px, transparent 1px 100%);background-size:24px 24px;opacity:.35;pointer-events:none}
+    .lake{position:absolute;left:0%;top:0%;width:32%;height:32%;background:var(--lake);border:4px solid var(--lake2)}
+    .lake-right{left:auto;right:0%;top:0%;width:24%;height:26%}
+    .platform{position:absolute;width:36px;height:16px;background:#ece3c4;border:4px solid var(--dark);z-index:3}
+    .platform-left{left:31%;top:28%}
+    .platform-right{right:21%;top:28%}
+    
+    .lake::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg, rgba(255,255,255,.16) 0 6px, transparent 6px 12px);opacity:.45}
+    .path.h1,.path.h2,.path.v1,.path.v2{position:absolute;background:var(--path);border:4px solid var(--path2)}
+    .path.h1{left:16%;right:16%;top:38%;height:12%}
+    .path.h2{left:16%;right:10%;top:68%;height:12%}
+    .path.v1{left:22%;top:22%;bottom:20%;width:12%}
+    .path.v2{left:60%;top:26%;bottom:20%;width:12%}
+
+    .booth,.cashier,.gate,.dock{position:absolute;border:4px solid var(--dark)}
+    .booth{width:110px;height:92px}.booth .roof,.cashier .roof{position:absolute;left:0;right:0;top:0;height:34px;border-bottom:4px solid var(--dark)}
+    .booth .body,.cashier .body{position:absolute;left:0;right:0;bottom:0;top:34px;background:#f0e2c6}
+    .booth .sign,.cashier .sign{position:absolute;top:-28px;left:50%;transform:translateX(-50%);padding:4px 8px;background:var(--dark);border:3px solid #5f4b88;color:#fff4b6;font-size:12px;white-space:nowrap}
+    .booth.left{left:27%;top:12%}.booth.left .roof{background:var(--booth)}
+    .booth.right{right:10%;top:12%}.booth.right .roof{background:var(--booth2)}
+    .cashier{left:43%;top:46%;width:132px;height:106px}.cashier .roof{background:var(--cash)}
+    .gate{left:18%;top:72%;width:58px;height:42px;background:var(--gate)}
+    .gate::before,.gate::after{content:"";position:absolute;top:-12px;width:10px;height:54px;background:var(--gate);border:4px solid var(--dark)}
+    .gate::before{left:-14px}.gate::after{right:-14px}
+    .dock{left:24%;top:16%;width:24px;height:74px;background:#d7b489}
+
+    .cashier-operator,.left-operator,.right-operator{position:absolute;width:18px;height:22px;transform:translate(-50%,-50%);z-index:5}
+    .cashier-operator .head,.left-operator .head,.right-operator .head,.client .head{position:absolute;top:0;left:3px;width:12px;height:9px;background:#ffd8b0;border:3px solid var(--dark)}
+    .cashier-operator .body,.left-operator .body,.right-operator .body,.client .body{position:absolute;left:1px;right:1px;top:7px;bottom:3px;border:3px solid var(--dark)}
+    .cashier-operator .body{background:var(--yellow)} .left-operator .body{background:var(--mint)} .right-operator .body{background:var(--cyan)}
+    .left-operator{left:33%;top:25%}.right-operator{right:16%;top:25%}.cashier-operator{left:49.5%;top:58%}
+
+    .client{position:absolute;width:22px;height:28px;transform:translate(-50%,-50%);z-index:8;transition:left 1.5s steps(20), top 1.5s steps(20), opacity .2s linear}
+    .client.hidden{opacity:0}.client .body{background:var(--red)} .client .leg1,.client .leg2{position:absolute;bottom:0;width:5px;height:6px;background:var(--dark)} .client .leg1{left:3px}.client .leg2{right:3px}
+    .helmet{position:absolute;top:-4px;left:4px;width:14px;height:6px;background:#ffffff;border:3px solid var(--dark)}
+    .vest{position:absolute;left:4px;right:4px;top:12px;height:8px;background:#ffe766;border-left:3px solid var(--dark);border-right:3px solid var(--dark)}
+    .board{position:absolute;right:-14px;top:10px;width:8px;height:22px;background:#ffffff;border:3px solid var(--dark)}
+    .client .body{position:absolute;left:2px;right:2px;top:8px;bottom:4px;border:3px solid var(--dark)}
+
+
+
+    h2,h3{margin:0 0 10px 0;color:var(--yellow);font-size:18px;text-transform:uppercase}.story{min-height:96px;line-height:1.5;font-size:14px}.choices{display:grid;gap:10px;margin-top:12px}
+    .btn{border:none;background:#18263d;color:var(--text);padding:12px 14px;text-align:left;font:inherit;cursor:pointer;border:4px solid #5b75a8;box-shadow:inset 0 -4px 0 rgba(0,0,0,.28)} .btn:hover{filter:brightness(1.08)} .btn.primary{background:#235347;border-color:var(--mint)} .btn.ring{background:#234d78;border-color:var(--cyan)} .btn.reverse{background:#6b3f6d;border-color:#f5a6d8}
+    .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.status{background:#20304b;border:3px solid var(--dark);padding:10px;font-size:12px;min-height:70px}.status strong{display:block;color:#fff4aa;margin-bottom:6px;font-size:11px;text-transform:uppercase}
+    .chat{display:grid;gap:8px;max-height:260px;overflow:auto}.msg{padding:10px 12px;border:3px solid var(--dark);font-size:13px;line-height:1.4}.msg.bot{background:#1d2d48}.msg.user{background:#56406f}.msg.system{background:#295246}
+
+    .dialog-overlay{position:absolute;inset:0;background:rgba(11,18,32,.78);display:flex;align-items:center;justify-content:center;z-index:35;pointer-events:none}
+    .dialog-overlay.active{pointer-events:auto}
+    .dialog-box{width:min(480px,88%);background:#1e2f4a;border:4px solid var(--dark);box-shadow:var(--shadow);padding:0;overflow:hidden}
+    .dialog-title{background:#0f1d30;padding:8px 14px;font-size:12px;color:#aac4e0;text-transform:uppercase;letter-spacing:1px;border-bottom:4px solid var(--dark)}
+    .dialog-lines{padding:14px;display:grid;gap:10px}
+    .dialog-line{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4}
+    .dialog-speaker{min-width:80px;color:#ffd85a;font-size:12px;text-transform:uppercase}
+    .dialog-text{color:#f0f6ff}
+    .dialog-line.highlight .dialog-text{color:#8cf0b8}
+    .dialog-actions{padding:10px 14px;border-top:4px solid var(--dark);display:flex;gap:10px;flex-wrap:wrap}
+    .dialog-overlay.hidden{display:none}
+
+    .kw-logo { display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:14px; }
+    .kw-mark { width:96px; height:64px; position:relative; }
+    .kw-wave1, .kw-wave2, .kw-wave3 { position:absolute; left:0; right:0; height:14px; border:4px solid var(--dark); border-radius:999px; }
+    .kw-wave1 { top:4px; background:#4ba6d8; transform:skewX(-18deg); }
+    .kw-wave2 { top:22px; background:#7fe0ff; transform:skewX(-18deg); width:84%; margin:auto; }
+    .kw-wave3 { top:40px; background:#ff9900; transform:skewX(-18deg); width:68%; margin:auto; }
+    .kw-title { text-align:center; line-height:1.05; }
+    .kw-title .k1 { display:block; font-size:18px; color:#7fe0ff; text-transform:uppercase; letter-spacing:1px; }
+    .kw-title .k2 { display:block; font-size:24px; color:#ffd85a; text-transform:uppercase; letter-spacing:1px; }
+
+    @media (max-width:960px){.app{grid-template-columns:1fr}.status-grid{grid-template-columns:1fr}}
+
+    /* === WATER ANIMATION === */
+    @keyframes waterShimmer {
+      0%   { background-position: 0% 0%; }
+      100% { background-position: 200% 200%; }
+    }
+    @keyframes waterPulse {
+      0%, 100% { opacity: .45; }
+      50%       { opacity: .65; }
+    }
+    .lake::before {
+      background: repeating-linear-gradient(135deg,
+        rgba(255,255,255,.22) 0 6px, transparent 6px 14px,
+        rgba(120,220,255,.12) 14px 20px, transparent 20px 28px);
+      background-size: 56px 56px;
+      animation: waterShimmer 3s linear infinite, waterPulse 2s ease-in-out infinite;
+    }
+    .lake-right::before {
+      content:"";position:absolute;inset:0;
+      background: repeating-linear-gradient(135deg,
+        rgba(255,255,255,.18) 0 5px, transparent 5px 12px,
+        rgba(120,220,255,.10) 12px 17px, transparent 17px 24px);
+      background-size: 48px 48px;
+      animation: waterShimmer 3.5s linear infinite, waterPulse 2.4s ease-in-out infinite;
+      opacity: .5;
+    }
+
+    /* === TREES === */
+    .tree { position:absolute; width:20px; height:28px; z-index:3; }
+    .tree .trunk { position:absolute; bottom:0; left:7px; width:6px; height:8px; background:#7a5c32; border:2px solid #3d2a10; }
+    .tree .crown { position:absolute; bottom:7px; left:0; width:20px; height:22px; background:#3d8c3d; border:3px solid #265926; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+    .tree .crown2 { position:absolute; bottom:13px; left:2px; width:16px; height:16px; background:#4aa04a; border:2px solid #2d7a2d; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+
+    /* === GRASS TILES === */
+    .grass-tile { position:absolute; width:18px; height:14px; background:#5e8d52; border:2px solid #3f6e36; z-index:1; }
+    .grass-tile.dark { background:#4a7040; border-color:#305230; }
+    .grass-tile::before { content:""; position:absolute; top:0; left:4px; width:3px; height:8px; background:#7db86a; border-left:1px solid #4a7040; }
+    .grass-tile::after  { content:""; position:absolute; top:0; left:9px; width:3px; height:10px; background:#6da85a; border-left:1px solid #4a7040; }
+
+    /* === DOCK / PIER === */
+    .pier { position:absolute; z-index:3; }
+    .pier .plank { position:absolute; background:#c8a96e; border:2px solid #7a5c32; }
+    .pier .post  { position:absolute; background:#8b6234; border:2px solid #4a3018; width:6px; }
+
+    /* === CLIENT — райдер горизонтально при езде === */
+    .client.riding { transform: translate(-50%,-50%) rotate(-90deg); }
+    .client .board-h { display:none; position:absolute; bottom:-10px; left:-8px; width:38px; height:8px; background:#ffffff; border:3px solid var(--dark); border-radius:2px; }
+    .client.riding .board   { display:none; }
+    .client.riding .board-h { display:block; }
+    .client.riding .helmet  { background:#ff6633; }
+
+    /* === OPERATOR COLORS === */
+    .left-operator  .body { background:#4ecb8d; }   /* зелёный — кольцо */
+    .right-operator .body { background:#f07acd; }   /* розовый — реверс */
+    .cashier-operator .body { background:#ffd85a; } /* жёлтый — касса */
+
+    /* оператор кольца — жилет поверх */
+    .left-operator .vest-op, .right-operator .vest-op { position:absolute; left:1px; right:1px; top:9px; height:6px; border:2px solid var(--dark); }
+    .left-operator  .vest-op { background:#2ea86d; }
+    .right-operator .vest-op { background:#c040a0; }
+
+    /* Client — жилет и шлем улучшенные */
+    .client .helmet { background:#ff6633; border:3px solid var(--dark); width:16px; height:8px; }
+    .client .vest   { background:#ff9900; border-left:3px solid var(--dark); border-right:3px solid var(--dark); }
+
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="frame left">
+      <div class="top">
+        <div>
+          <h1>Wakeclub Pixel Demo</h1>
+          <div class="meta">Вейкклуб в top-down pixel стиле: озеро, будки операторов, касса, ворота и клиент с доской.</div>
+        </div>
+        <div class="chips">
+          <div class="chip" id="phaseChip">Фаза: старт</div>
+          <div class="chip" id="routeChip">Трасса: не выбрана</div>
+          <div class="chip" id="targetChip">Цель: —</div>
+        </div>
+      </div>
+
+      <div class="world" id="world">
+        <div class="overlay" id="startOverlay"><div class="start-card">
+<div class="kw-logo" aria-label="Kraskovo Wakepark logo">
+  <div class="kw-mark">
+    <div class="kw-wave1"></div>
+    <div class="kw-wave2"></div>
+    <div class="kw-wave3"></div>
+  </div>
+  <div class="kw-title"><span class="k1">Kraskovo</span><span class="k2">Wakepark</span></div>
+</div>
+<h2 class="title-big">Wakeclub</h2><div style="margin-bottom:12px;color:var(--muted)">Оформления катания</div><button class="btn primary" id="pressStartBtn" type="button" style="text-align:center; position:relative; z-index:50; pointer-events:auto;">PRESS START</button><div class="meta blink" style="margin-top:12px">Нажми, чтобы начать интерактив</div></div></div><div class="lake"></div><div class="lake lake-right"></div><div class="platform platform-left"></div><div class="platform platform-right"></div>
+        <div class="dock"></div>
+        <div class="path h1"></div><div class="path h2"></div><div class="path v1"></div><div class="path v2"></div>
+
+        <div class="booth left"><div class="sign">Оператор кольца</div><div class="roof"></div><div class="body"></div></div>
+        <div class="booth right"><div class="sign">Оператор реверса</div><div class="roof"></div><div class="body"></div></div>
+        <div class="cashier"><div class="sign">Касса</div><div class="roof"></div><div class="body">
+  <div style="position:absolute;left:12px;top:8px;width:34px;height:22px;background:#2b3d6e;border:3px solid #0b1220;">
+    <div style="position:absolute;left:4px;top:3px;width:26px;height:14px;background:#6fc3ff;border:2px solid #0b1220;"></div>
+  </div>
+  <div style="position:absolute;left:50px;top:8px;width:20px;height:18px;background:#d8c89a;border:3px solid #0b1220;"></div>
+  <div style="position:absolute;left:12px;top:36px;right:12px;height:14px;background:#c7aa78;border:3px solid #0b1220;"></div>
+  <div style="position:absolute;left:30px;top:50px;width:36px;height:8px;background:#8f6f3f;border:2px solid #0b1220;"></div>
+</div></div>
+        <div class="gate"></div>
+        <!-- Trees -->
+        <div class="tree" style="left:34%;top:4%"></div>
+        <div class="tree" style="left:40%;top:2%"></div>
+        <div class="tree" style="left:46%;top:5%"></div>
+        <div class="tree" style="left:68%;top:4%"></div>
+        <div class="tree" style="left:73%;top:3%"></div>
+        <div class="tree" style="left:2%;top:42%"></div>
+        <div class="tree" style="left:2%;top:56%"></div>
+        <div class="tree" style="left:2%;top:70%"></div>
+        <div class="tree" style="right:2%;top:42%"></div>
+        <div class="tree" style="right:2%;top:58%"></div>
+        <div class="tree" style="left:38%;bottom:2%"></div>
+        <div class="tree" style="left:54%;bottom:2%"></div>
+        <div class="tree" style="left:70%;bottom:2%"></div>
+        <!-- Grass patches -->
+        <div class="grass-tile" style="left:36%;top:55%"></div>
+        <div class="grass-tile dark" style="left:40%;top:58%"></div>
+        <div class="grass-tile" style="left:72%;top:55%"></div>
+        <div class="grass-tile dark" style="left:76%;top:58%"></div>
+        <div class="grass-tile" style="left:20%;top:66%"></div>
+        <div class="grass-tile dark" style="left:24%;top:68%"></div>
+        <!-- Left pier -->
+        <div class="pier" style="left:28%;top:18%">
+          <div class="plank" style="left:0;top:0;width:6px;height:40px"></div>
+          <div class="plank" style="left:8px;top:0;width:6px;height:40px"></div>
+          <div class="plank" style="left:14px;top:0;width:6px;height:40px"></div>
+          <div class="post"  style="left:0;top:38px;height:14px"></div>
+          <div class="post"  style="left:14px;top:38px;height:14px"></div>
+        </div>
+        <!-- Right pier -->
+        <div class="pier" style="right:22%;top:18%">
+          <div class="plank" style="left:0;top:0;width:6px;height:32px"></div>
+          <div class="plank" style="left:8px;top:0;width:6px;height:32px"></div>
+          <div class="plank" style="left:14px;top:0;width:6px;height:32px"></div>
+          <div class="post"  style="left:0;top:30px;height:12px"></div>
+          <div class="post"  style="left:14px;top:30px;height:12px"></div>
+        </div>
+
+
+        <div class="left-operator" id="leftOperator"><div class="head"></div><div class="body"></div><div class="vest-op"></div></div>
+        <div class="right-operator" id="rightOperator"><div class="head"></div><div class="body"></div><div class="vest-op"></div></div>
+        <div class="cashier-operator" id="cashierNpc"><div class="head"></div><div class="body"></div></div>
+
+
+        <div class="client" id="client" style="left:15%;top:82%">
+          <div class="helmet"></div><div class="head"></div><div class="body"></div><div class="vest"></div><div class="leg1"></div><div class="leg2"></div><div class="board"></div><div class="board-h"></div>
+        </div>
+        <div class="dialog-overlay hidden" id="dialogOverlay">
+          <div class="dialog-box">
+            <div class="dialog-title" id="dialogTitle">Диалог</div>
+            <div class="dialog-lines" id="dialogLines"></div>
+            <div class="dialog-actions" id="dialogActions"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="right">
+      <section class="frame panel">
+        <h2>Сценарий</h2>
+        <div class="story" id="story">Нажми СТАРТ ниже, чтобы клиент подошёл к оператору и начал оформление катания.</div>
+        <div class="choices" id="choices"></div>
+      </section>
+      <section class="frame panel">
+        <h3>Состояние</h3>
+        <div class="status-grid" id="statusGrid"></div>
+      </section>
+      <section class="frame panel">
+        <h3>Журнал</h3>
+        <div class="chat" id="chat"></div>
+      </section>
+    </aside>
+  </main>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const els = {
+      story: $('#story'), choices: $('#choices'), statusGrid: $('#statusGrid'), chat: $('#chat'),
+      phaseChip: $('#phaseChip'), routeChip: $('#routeChip'), targetChip: $('#targetChip'),
+      startOverlay: $('#startOverlay'), pressStartBtn: $('#pressStartBtn'),
+      dialogOverlay: $('#dialogOverlay'), dialogLines: $('#dialogLines'), dialogTitle: $('#dialogTitle'), dialogActions: $('#dialogActions'),
+      client: $('#client'), leftOperator: $('#leftOperator'), rightOperator: $('#rightOperator'), cashierNpc: $('#cashierNpc')
+    };
+
+    const pts = {
+      gate:{x:15,y:82}, leftOp:{x:33,y:25}, cashier:{x:49.5,y:58}, rightOp:{x:84,y:25},
+      exitLeft:{x:8,y:-12}, exitRight:{x:104,y:4}, payWait:{x:42,y:70}
+    };
+
+    const state = { phase:'старт', route:null, target:'—', paid:false, finished:false };
+
+    function moveInstant(node,x,y){ node.style.transition='none'; node.style.left=x+'%'; node.style.top=y+'%'; node.getBoundingClientRect(); node.style.transition='left 1.5s steps(20), top 1.5s steps(20), opacity .2s linear'; }
+    function move(node,x,y,ms=1500){ return new Promise(r=>{ node.style.left=x+'%'; node.style.top=y+'%'; setTimeout(r,ms); }); }
+
+    function setStory(text,buttons=[]){
+      els.story.textContent=text; els.choices.innerHTML='';
+      buttons.forEach(b=>{ const btn=document.createElement('button'); btn.className='btn '+(b.className||''); btn.textContent=b.label; btn.onclick=b.onClick; els.choices.appendChild(btn); });
+    }
+
+    function log(role,text,kind='bot'){ const d=document.createElement('div'); d.className='msg '+kind; d.textContent=role+': '+text; els.chat.prepend(d); }
+
+    function update(){
+      els.phaseChip.textContent='Фаза: '+state.phase;
+      els.routeChip.textContent='Трасса: '+(state.route||'не выбрана');
+      els.targetChip.textContent='Цель: '+state.target;
+      const rows=[['Фаза',state.phase],['Выбор трассы',state.route||'ожидание'],['Оплата',state.paid?'получена':'ещё нет'],['Финал',state.finished?'заезд начат':'не завершён'],['Следующая точка',state.target],['Клиент',state.finished?'уехал кататься':'в клубе']];
+      els.statusGrid.innerHTML=rows.map(([k,v])=>`<div class="status"><strong>${k}</strong>${v}</div>`).join('');
+    }
+
+    function showDialog(title, lines, buttons=[]){
+      els.dialogTitle.textContent = title;
+      els.dialogLines.innerHTML = lines.map(([spk,txt,hl])=>
+        `<div class="dialog-line${hl?' highlight':''}"><span class="dialog-speaker">${spk}</span><span class="dialog-text">${txt}</span></div>`
+      ).join('');
+      els.dialogActions.innerHTML='';
+      buttons.forEach(b=>{
+        const btn=document.createElement('button');
+        btn.className='btn '+(b.className||'');
+        btn.textContent=b.label;
+        btn.onclick=b.onClick;
+        els.dialogActions.appendChild(btn);
+      });
+      els.dialogOverlay.classList.remove('hidden');
+      els.dialogOverlay.classList.add('active');
+    }
+
+    function hideDialog(){
+      els.dialogOverlay.classList.add('hidden');
+      els.dialogOverlay.classList.remove('active');
+    }
+
+    function resetSafe(){
+      state.phase='старт'; state.route=null; state.target='оператор'; state.paid=false; state.finished=false;
+      els.chat.innerHTML='';
+      moveInstant(els.client, pts.gate.x, pts.gate.y);
+      els.client.classList.remove('hidden');
+      hideDialog();
+      update();
+    }
+
+    async function startGame(){
+      els.startOverlay.classList.add('hidden');
+      resetSafe();
+      state.phase='идёт к оператору'; state.target='левая будка'; update();
+      setStory('Клиент с вейкбордом идёт к оператору у озера.',[]);
+      await move(els.client, pts.leftOp.x, 38, 1400);
+      await move(els.client, pts.leftOp.x, pts.leftOp.y + 8, 900);
+      log('Клиент','Хочу катать!','user');
+      log('Оператор','На кольце или реверсе?','bot');
+      state.phase='выбор трассы'; state.target='ответ клиенту'; update();
+      showDialog('Будка оператора кольца', [
+        ['Клиент','Хочу катать!'],
+        ['Оператор','На кольце или реверсе?']
+      ],[
+        {label:'На кольце', className:'ring', onClick:()=>{ hideDialog(); chooseRoute('кольцо'); }},
+        {label:'На реверсе', className:'reverse', onClick:()=>{ hideDialog(); chooseRoute('реверс'); }}
+      ]);
+      setStory('Оператор уточняет, где клиент хочет кататься.',[]);
+    }
+
+    async function chooseRoute(route){
+      state.route = route; state.phase='переход к кассе'; state.target='касса'; update();
+      log('Клиент', route === 'кольцо' ? 'На кольце' : 'На реверсе','user');
+      log('Оператор','Хорошо, иди плати!','bot');
+      showDialog('Будка оператора — ответ', [
+        ['Клиент', route === 'кольцо' ? 'На кольце' : 'На реверсе', true],
+        ['Оператор','Хорошо, иди плати!']
+      ],[{label:'Идти к кассе ▶', className:'primary', onClick:async()=>{
+        hideDialog();
+        setStory('Клиент идёт к кассе.',[]);
+        await move(els.client, pts.payWait.x, 70, 1200);
+        await move(els.client, pts.cashier.x, pts.cashier.y + 10, 900);
+        await cashierStage();
+      }}]);
+      setStory('Оператор отправляет клиента к кассе.',[]);
+    }
+
+    async function cashierStage(){
+      state.phase='оплата'; state.target='касса'; update();
+      const text = state.route === 'кольцо' ? 'Хочу на кольце' : 'Хочу на реверсе';
+      log('Клиент', text,'user');
+      log('Кассир','Оплачивайте и идите на старт катания!','bot');
+      state.paid = true; update();
+      showDialog('Касса', [
+        ['Клиент', text, true],
+        ['Кассир','Оплачивайте и идите на старт катания!']
+      ],[{label:'Оплатить и идти на старт ▶', className:'primary', onClick:()=>{ hideDialog(); finalRide(); }}]);
+      setStory('Клиент оплачивает катание.',[]);
+    }
+
+    async function finalRide(){
+      state.phase='идёт к будке старта';
+      state.target = state.route === 'кольцо' ? 'будка кольца' : 'будка реверса';
+      update();
+      if(state.route === 'кольцо'){
+        await move(els.client, pts.leftOp.x, 38, 1400);
+        await move(els.client, pts.leftOp.x, pts.leftOp.y + 8, 900);
+        log('Клиент','Уииии, погнали!','user');
+        state.phase='заезд начался'; state.finished=true; state.target='вне экрана'; update();
+        showDialog('Старт! 🏄', [['Клиент','Уииии, погнали!', true]], []);
+        await new Promise(r=>setTimeout(r,1200));
+        hideDialog();
+        els.client.classList.add('riding');
+        await move(els.client, pts.exitLeft.x, pts.exitLeft.y, 1400);
+        els.client.classList.remove('riding');
+      } else {
+        await move(els.client, 74, 38, 1400);
+        await move(els.client, pts.rightOp.x, pts.rightOp.y + 8, 900);
+        log('Клиент','Уииии, погнали!','user');
+        state.phase='заезд начался'; state.finished=true; state.target='вне экрана'; update();
+        showDialog('Старт! 🏄', [['Клиент','Уииии, погнали!', true]], []);
+        await new Promise(r=>setTimeout(r,1200));
+        hideDialog();
+        els.client.classList.add('riding');
+        await move(els.client, pts.exitRight.x, pts.exitRight.y, 1400);
+        els.client.classList.remove('riding');
+      }
+      setStory('Клиент уехал кататься. Сценарий завершён.',[
+        {label:'Запустить заново', className:'primary', onClick:startGame}
+      ]);
+    }
+
+    setStory('Нажми PRESS START на экране, чтобы начать сценарий.',[]);
+    els.pressStartBtn.addEventListener('click', startGame);
+    els.startOverlay.addEventListener('click', function(e){ if(e.target === els.startOverlay){ startGame(); } });
+    resetSafe();
+  </script>
+</body>
+</html>
