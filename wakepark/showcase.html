@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wakeclub-pixel-demo</title>
+  <title>Wakeclub — Showcase</title>
   <style>
     :root{
       --bg:#142033; --panel:#273856; --panel2:#33486d; --dark:#0b1220; --text:#f5fbff; --muted:#c4d6ea;
@@ -13,7 +13,7 @@
     }
     *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
     body{padding:16px;background-image:linear-gradient(rgba(255,255,255,.02) 50%, transparent 50%);background-size:100% 4px}
-    .app{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:1.4fr .92fr;gap:16px}.frame{background:var(--panel);border:4px solid var(--dark);box-shadow:var(--shadow)}
+    .app{max-width:960px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:16px}.frame{background:var(--panel);border:4px solid var(--dark);box-shadow:var(--shadow)}
     .left{padding:12px}.right{display:grid;gap:12px}.panel{padding:12px;background:var(--panel2);border:4px solid var(--dark)}
     .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
     h1{margin:0;font-size:clamp(20px,2vw,30px);text-transform:uppercase;color:var(--yellow);letter-spacing:1px}.meta{font-size:13px;color:var(--muted);margin-top:4px}
@@ -165,7 +165,7 @@
   </style>
 </head>
 <body>
-  <main class="app">
+  <main class="app"><div style="margin-bottom:10px"><a href="../" style="display:inline-block;padding:8px 14px;background:#17243d;border:3px solid #5870a2;color:#c4d6ea;font-size:12px;text-decoration:none;font-family:ui-monospace,monospace">← Каталог</a></div>
     <section class="frame left">
       <div class="top">
         <div>
@@ -260,22 +260,6 @@
         </div>
       </div>
     </section>
-
-    <aside class="right">
-      <section class="frame panel">
-        <h2>Сценарий</h2>
-        <div class="story" id="story">Нажми СТАРТ ниже, чтобы клиент подошёл к оператору и начал оформление катания.</div>
-        <div class="choices" id="choices"></div>
-      </section>
-      <section class="frame panel">
-        <h3>Состояние</h3>
-        <div class="status-grid" id="statusGrid"></div>
-      </section>
-      <section class="frame panel">
-        <h3>Журнал</h3>
-        <div class="chat" id="chat"></div>
-      </section>
-    </aside>
   </main>
 
   <script>
@@ -299,18 +283,18 @@
     function move(node,x,y,ms=1500){ return new Promise(r=>{ node.style.left=x+'%'; node.style.top=y+'%'; setTimeout(r,ms); }); }
 
     function setStory(text,buttons=[]){
-      els.story.textContent=text; els.choices.innerHTML='';
+      if(els.story)els.story.textContent=text; if(!els.choices)return; els.choices.innerHTML='';
       buttons.forEach(b=>{ const btn=document.createElement('button'); btn.className='btn '+(b.className||''); btn.textContent=b.label; btn.onclick=b.onClick; els.choices.appendChild(btn); });
     }
 
-    function log(role,text,kind='bot'){ const d=document.createElement('div'); d.className='msg '+kind; d.textContent=role+': '+text; els.chat.prepend(d); }
+    function log(role,text,kind='bot'){ const d=document.createElement('div'); d.className='msg '+kind; d.textContent=role+': '+text; if(!els.chat)return; els.chat.prepend(d); }
 
     function update(){
-      els.phaseChip.textContent='Фаза: '+state.phase;
-      els.routeChip.textContent='Трасса: '+(state.route||'не выбрана');
-      els.targetChip.textContent='Цель: '+state.target;
+      if(els.phaseChip)els.phaseChip.textContent='Фаза: '+state.phase;
+      if(els.routeChip)els.routeChip.textContent='Трасса: '+(state.route||'не выбрана');
+      if(els.targetChip)els.targetChip.textContent='Цель: '+state.target;
       const rows=[['Фаза',state.phase],['Выбор трассы',state.route||'ожидание'],['Оплата',state.paid?'получена':'ещё нет'],['Финал',state.finished?'заезд начат':'не завершён'],['Следующая точка',state.target],['Клиент',state.finished?'уехал кататься':'в клубе']];
-      els.statusGrid.innerHTML=rows.map(([k,v])=>`<div class="status"><strong>${k}</strong>${v}</div>`).join('');
+      if(els.statusGrid)els.statusGrid.innerHTML=rows.map(([k,v])=>`<div class="status"><strong>${k}</strong>${v}</div>`).join('');
     }
 
     function showDialog(title, lines, buttons=[]){
@@ -337,7 +321,7 @@
 
     function resetSafe(){
       state.phase='старт'; state.route=null; state.target='оператор'; state.paid=false; state.finished=false;
-      els.chat.innerHTML='';
+      if(els.chat)els.chat.innerHTML='';
       moveInstant(els.client, pts.gate.x, pts.gate.y);
       els.client.classList.remove('hidden');
       hideDialog();
